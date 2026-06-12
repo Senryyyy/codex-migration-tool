@@ -1,0 +1,15 @@
+# Local migration packages and temporary output
+CodexImport/
+ExtraProjects/
+*.zip
+
+# OS/editor noise
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+
+# PowerShell temp/log files
+*.log
+*.tmp
+
