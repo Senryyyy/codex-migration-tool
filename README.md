@@ -1,55 +1,74 @@
-# Codex Migration Tool
+# Codex 迁移工具
 
-A Windows migration helper for moving local Codex conversations, Codex app state, and selected project folders between two PCs over a LAN shared folder.
+中文 | [English](README.en.md)
 
-## What It Migrates
+一个 Windows 图形化迁移工具，用于在同一局域网内的两台电脑之间迁移本地 Codex 对话、Codex 本地状态、默认工作区，以及你额外选择的项目文件夹。
 
-- Codex conversations and local state from `%USERPROFILE%\.codex`
-- Codex workspaces from `%USERPROFILE%\Documents\Codex`
-- Optional extra project folders selected in the GUI
-- Extra project folders are restored to the same absolute paths on the new PC
+## 迁移内容
 
-The tool intentionally does not migrate API login credentials such as `auth.json`.
+- `%USERPROFILE%\.codex` 中的 Codex 对话、本地状态、配置、记忆、技能和插件
+- `%USERPROFILE%\Documents\Codex` 中的 Codex 默认工作区
+- 你在界面中手动添加的额外项目文件夹
+- 额外项目会在新电脑上恢复到旧电脑相同的绝对路径
 
-## Files
+工具会刻意跳过 API 登录凭据，例如 `auth.json`，避免把登录状态或敏感凭据复制到另一台机器。
 
-- `CodexMigrationTool.cmd` - double-click launcher
-- `CodexMigrationTool.ps1` - GUI wrapper
-- `codex-migrate.ps1` - migration engine
+## 文件组成
 
-Keep all three files in the same folder.
+- `CodexMigrationTool.cmd`：双击启动入口
+- `CodexMigrationTool.ps1`：图形界面
+- `codex-migrate.ps1`：迁移引擎
 
-## Typical Workflow
+使用时请把这三个文件放在同一个文件夹里。
 
-1. On the new PC, create and share a folder such as `C:\CodexImport`.
-2. On the old PC, run `CodexMigrationTool.cmd`.
-3. Set the migration package folder to the network share, for example:
+## 典型使用流程
+
+1. 在新电脑创建一个接收目录，例如：
+
+   ```text
+   C:\CodexImport
+   ```
+
+2. 把这个目录共享到局域网。
+3. 在旧电脑双击运行 `CodexMigrationTool.cmd`。
+4. 将迁移包路径设置为新电脑共享目录，例如：
 
    ```text
    \\NEWPC\CodexImport
    ```
 
-4. Add any extra project folders that should be copied.
-5. Close Codex on the old PC.
-6. Click `Old PC: Export package`.
-7. On the new PC, run the same tool.
-8. Click `New PC: Verify package`.
-9. Close Codex on the new PC.
-10. Click `New PC: Import package`.
+5. 如果还要迁移自己创建的项目目录，点击 `Add Project Folder` 添加这些项目文件夹。
+6. 关闭旧电脑上的 Codex。
+7. 点击 `Old PC: Export package` 导出迁移包。
+8. 在新电脑运行同一个工具。
+9. 点击 `New PC: Verify package` 校验迁移包。
+10. 关闭新电脑上的 Codex。
+11. 点击 `New PC: Import package` 导入。
 
-## Notes From Real Use
+## 实际使用注意事项
 
-- During transfer, the black terminal window keeps showing copy progress. The GUI window may show as not responding during large copies; this is expected. Check Task Manager or watch whether the receiving folder size is still changing.
-- If a run fails partway through, the safest practical recovery is to delete the incomplete migration package folder and start again. With a stable LAN connection, the transfer usually completes in one clean run.
-- Extra projects are copied with `robocopy` and tracked in `extra-projects.json`; they are not fully hashed into `migration-manifest.json`, because build folders can contain very long paths and many transient files.
+- 传输时黑色终端窗口会持续显示 `robocopy` 复制进度。白色 GUI 窗口在大文件夹复制期间可能显示“无响应”，这是正常现象。
+- 判断是否还在传输，可以看任务管理器里的磁盘/网络活动，也可以看接收电脑共享文件夹大小是否还在变化。
+- 如果一次没有成功，最稳妥的做法是删除接收端不完整的迁移包文件夹，然后重新来一遍。网络稳定时通常可以一次完成。
+- 额外项目使用 `robocopy` 完整复制，并通过 `extra-projects.json` 记录路径映射；它们不会逐文件写入 `migration-manifest.json`，因为构建目录里经常有超长路径和临时文件。
 
-## Verification Scope
+## 校验范围
 
-The main manifest verifies Codex conversations, settings, and workspace files. Extra project folders are checked by presence through `extra-projects.json` and restored with `robocopy`.
+`migration-manifest.json` 会校验 Codex 对话、配置和默认工作区文件。额外项目文件夹通过 `extra-projects.json` 检查目录引用，并在导入时用 `robocopy` 恢复。
 
-## Requirements
+## 环境要求
 
-- Windows PowerShell 5 or newer
-- Windows file sharing enabled between the two PCs
-- Same Windows username on both PCs if you want extra project folders restored to the exact same paths
+- Windows PowerShell 5 或更新版本
+- 两台电脑位于同一局域网，且 Windows 文件共享可用
+- 如果希望额外项目恢复到完全相同路径，新旧电脑最好使用相同 Windows 用户名
+
+## 不迁移的内容
+
+默认不会迁移以下内容：
+
+- Codex 登录凭据，例如 `.codex\auth.json`
+- 机器身份文件，例如 `.codex\installation_id`
+- 临时目录、sandbox、浏览器缓存和运行时缓存
+
+这些内容建议在新电脑上由 Codex 重新生成。
 
